@@ -27,6 +27,8 @@ import { getReservations, getRooms, getRoomsWithGuests, updateReservation, updat
 import { createHousekeepingTask, getBarOrdersByRoom, markBarOrdersPaid } from "@/lib/staff-service";
 import { createNotification } from "@/lib/notification-service";
 import { printCheckInReceipt, printCheckOutInvoice } from "@/lib/print-utils";
+import { sendKbsNotification } from "@/lib/kbs-service";
+import { createAndSendEInvoice, buildInvoiceLines } from "@/lib/einvoice-service";
 import type { BarOrder, Reservation, Room } from "@/lib/types";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import {
@@ -280,6 +282,13 @@ function FrontDeskContent() {
       balance: Math.max(0, ciRes.balance - paidNow),
     }).catch(() => {});
 
+    // KBS bildirimi gönder (Emniyet Müdürlüğü)
+    try {
+      await sendKbsNotification(ciRes, ciSelectedRoom);
+    } catch (e) {
+      console.warn("KBS bildirimi gönderilemedi:", e);
+    }
+
     setCiProcessing(false);
     setCiStep("done");
   };
@@ -397,6 +406,17 @@ function FrontDeskContent() {
         priority: "medium",
         notes: `Check-out: ${coRes.guest.firstName} ${coRes.guest.lastName}`,
       }).catch(() => {});
+    }
+
+    // e-Fatura / e-Arşiv oluştur
+    try {
+      const invoiceLines = buildInvoiceLines(coRes, minibar);
+      await createAndSendEInvoice(coRes, invoiceLines, {
+        guestTaxNumber: coRes.guest.taxNumber || "",
+        companyName: coRes.guest.companyName || "",
+      });
+    } catch (e) {
+      console.warn("e-Fatura oluşturulamadı:", e);
     }
 
     setCoProcessing(false);

@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { getReservations, createReservation, updateReservation } from "@/lib/data-service";
 import { calculateStayRate, calculateDiscount } from "@/lib/rate-service";
+import { createGroupReservation, type GroupRoomRequest } from "@/lib/group-reservation-service";
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import type { Reservation, ReservationStatus, MealPlan } from "@/lib/types";
 import {
@@ -47,6 +48,7 @@ import {
   Coffee,
   Edit3,
   Save,
+  Users,
 } from "lucide-react";
 
 const statusConfig: Record<ReservationStatus, { label: string; variant: string }> = {
@@ -96,6 +98,21 @@ export default function ReservationsPage() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [detailRes, setDetailRes] = useState<Reservation | null>(null);
+
+  // Group reservation
+  const [showGroupDialog, setShowGroupDialog] = useState(false);
+  const [grpName, setGrpName] = useState("");
+  const [grpContact, setGrpContact] = useState("");
+  const [grpPhone, setGrpPhone] = useState("");
+  const [grpEmail, setGrpEmail] = useState("");
+  const [grpCompany, setGrpCompany] = useState("");
+  const [grpCheckIn, setGrpCheckIn] = useState("");
+  const [grpCheckOut, setGrpCheckOut] = useState("");
+  const [grpNotes, setGrpNotes] = useState("");
+  const [grpRooms, setGrpRooms] = useState<GroupRoomRequest[]>([
+    { roomType: "standard", quantity: 1, adults: 2, children: 0, mealPlan: "BB" },
+  ]);
+  const [grpLoading, setGrpLoading] = useState(false);
 
   // Edit reservation
   const [editMode, setEditMode] = useState(false);
@@ -240,6 +257,33 @@ export default function ReservationsPage() {
     );
   };
 
+  const handleGroupCreate = async () => {
+    if (!grpName || !grpContact || !grpCheckIn || !grpCheckOut) return;
+    setGrpLoading(true);
+    try {
+      const { reservations } = await createGroupReservation({
+        groupName: grpName,
+        contactName: grpContact,
+        contactPhone: grpPhone,
+        contactEmail: grpEmail,
+        companyName: grpCompany || undefined,
+        checkIn: grpCheckIn,
+        checkOut: grpCheckOut,
+        rooms: grpRooms,
+        notes: grpNotes || undefined,
+      });
+      setAllReservations((prev) => [...reservations, ...prev]);
+      setShowGroupDialog(false);
+      setGrpName(""); setGrpContact(""); setGrpPhone(""); setGrpEmail("");
+      setGrpCompany(""); setGrpCheckIn(""); setGrpCheckOut(""); setGrpNotes("");
+      setGrpRooms([{ roomType: "standard", quantity: 1, adults: 2, children: 0, mealPlan: "BB" }]);
+    } catch (err) {
+      console.error("Grup rezervasyonu oluşturulamadı:", err);
+    } finally {
+      setGrpLoading(false);
+    }
+  };
+
   const handleDuplicate = async () => {
     if (!dupRes || dupCount < 1) return;
     setDupLoading(true);
@@ -279,10 +323,16 @@ export default function ReservationsPage() {
             {allReservations.filter((r) => r.status === "confirmed").length} onaylı
           </p>
         </div>
-        <Button onClick={() => setShowNewDialog(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Yeni Rezervasyon
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowGroupDialog(true)}>
+            <Users className="mr-2 h-4 w-4" />
+            Grup Rez.
+          </Button>
+          <Button onClick={() => setShowNewDialog(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Yeni Rezervasyon
+          </Button>
+        </div>
       </div>
 
       {/* Status Tabs */}
@@ -826,6 +876,124 @@ export default function ReservationsPage() {
               </DialogFooter>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ═══ Group Reservation Dialog ═══ */}
+      <Dialog open={showGroupDialog} onOpenChange={setShowGroupDialog}>
+        <DialogContent className="max-w-xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-[15px] flex items-center gap-2">
+              <Users className="h-5 w-5" />
+              Grup Rezervasyonu
+            </DialogTitle>
+            <DialogDescription className="text-[12px]">
+              Birden fazla odayı tek seferde rezerve edin
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-muted-foreground">Grup Adı *</label>
+                <Input value={grpName} onChange={(e) => setGrpName(e.target.value)} placeholder="Şirket Toplantısı" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-muted-foreground">İletişim Kişisi *</label>
+                <Input value={grpContact} onChange={(e) => setGrpContact(e.target.value)} placeholder="Ad Soyad" />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-muted-foreground">Telefon</label>
+                <Input value={grpPhone} onChange={(e) => setGrpPhone(e.target.value)} placeholder="+90 5xx" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-muted-foreground">E-posta</label>
+                <Input value={grpEmail} onChange={(e) => setGrpEmail(e.target.value)} placeholder="email@sirket.com" />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-muted-foreground">Şirket</label>
+                <Input value={grpCompany} onChange={(e) => setGrpCompany(e.target.value)} placeholder="Şirket adı" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-muted-foreground">Giriş Tarihi *</label>
+                <Input type="date" value={grpCheckIn} onChange={(e) => setGrpCheckIn(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[11px] font-medium text-muted-foreground">Çıkış Tarihi *</label>
+                <Input type="date" value={grpCheckOut} onChange={(e) => setGrpCheckOut(e.target.value)} />
+              </div>
+            </div>
+
+            <Separator />
+            <div className="flex items-center justify-between">
+              <p className="text-[12px] font-semibold text-muted-foreground uppercase tracking-wider">Odalar</p>
+              <Button variant="outline" size="sm" onClick={() => setGrpRooms([...grpRooms, { roomType: "standard", quantity: 1, adults: 2, children: 0, mealPlan: "BB" }])}>
+                <Plus className="mr-1 h-3 w-3" /> Oda Ekle
+              </Button>
+            </div>
+            {grpRooms.map((room, idx) => (
+              <div key={idx} className="grid grid-cols-5 gap-2 items-end rounded border p-2">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-muted-foreground">Oda Tipi</label>
+                  <Select value={room.roomType} onValueChange={(v) => {
+                    const copy = [...grpRooms]; copy[idx] = { ...copy[idx], roomType: v as any }; setGrpRooms(copy);
+                  }}>
+                    <SelectTrigger className="h-8 text-[12px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(typeLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-muted-foreground">Adet</label>
+                  <Input type="number" min={1} max={50} className="h-8 text-[12px]" value={room.quantity}
+                    onChange={(e) => { const copy = [...grpRooms]; copy[idx] = { ...copy[idx], quantity: parseInt(e.target.value) || 1 }; setGrpRooms(copy); }} />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-muted-foreground">Yetişkin</label>
+                  <Input type="number" min={1} max={6} className="h-8 text-[12px]" value={room.adults}
+                    onChange={(e) => { const copy = [...grpRooms]; copy[idx] = { ...copy[idx], adults: parseInt(e.target.value) || 1 }; setGrpRooms(copy); }} />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-medium text-muted-foreground">Pansiyon</label>
+                  <Select value={room.mealPlan} onValueChange={(v) => {
+                    const copy = [...grpRooms]; copy[idx] = { ...copy[idx], mealPlan: v as any }; setGrpRooms(copy);
+                  }}>
+                    <SelectTrigger className="h-8 text-[12px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(mealPlanLabels).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  {grpRooms.length > 1 && (
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive"
+                      onClick={() => setGrpRooms(grpRooms.filter((_, i) => i !== idx))}>
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            <div className="space-y-1">
+              <label className="text-[11px] font-medium text-muted-foreground">Not</label>
+              <Input value={grpNotes} onChange={(e) => setGrpNotes(e.target.value)} placeholder="Grup hakkında not..." />
+            </div>
+
+            <div className="rounded-lg bg-muted/40 p-3 text-[12px]">
+              <p className="font-semibold">Toplam: {grpRooms.reduce((s, r) => s + r.quantity, 0)} oda</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setShowGroupDialog(false)}>İptal</Button>
+            <Button size="sm" onClick={handleGroupCreate} disabled={grpLoading || !grpName || !grpContact || !grpCheckIn || !grpCheckOut}>
+              {grpLoading ? "Oluşturuluyor..." : <><Users className="mr-1.5 h-3.5 w-3.5" />Grup Oluştur</>}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

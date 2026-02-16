@@ -7,6 +7,7 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { StatusBar } from "@/components/layout/status-bar";
 import { getSession, ensureDefaultUsers } from "@/lib/auth-service";
+import { getLicenseInfo, getTrialDaysRemaining, isTrialExpired } from "@/lib/license-service";
 
 const PUBLIC_PATHS = ["/login"];
 
@@ -54,6 +55,14 @@ export function ClientShell({ children }: { children: React.ReactNode }) {
         <Sidebar />
         <div className="flex flex-1 flex-col overflow-hidden">
           <Header />
+          {getLicenseInfo().type === "trial" && (
+            <div className={`flex items-center justify-center gap-2 px-3 py-1 text-[11px] font-medium ${isTrialExpired() ? "bg-red-600 text-white" : "bg-amber-100 text-amber-800"}`}>
+              {isTrialExpired()
+                ? "Deneme süreniz doldu! Lisans anahtarı girin → Ayarlar"
+                : `Deneme sürümü — ${getTrialDaysRemaining()} gün kaldı`}
+              <button onClick={() => router.push("/settings")} className="underline font-bold ml-1">Lisans Al</button>
+            </div>
+          )}
           <main className="flex-1 overflow-y-auto bg-background p-3 scrollbar-thin">
             {children}
           </main>
