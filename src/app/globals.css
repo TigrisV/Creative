@@ -1,0 +1,136 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ── Fidelio PMS Profesyonel Tema ── */
+    --background: 220 14% 96%;
+    --foreground: 220 20% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 10%;
+    --primary: 220 72% 32%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 10% 90%;
+    --secondary-foreground: 220 20% 18%;
+    --muted: 220 10% 93%;
+    --muted-foreground: 220 8% 46%;
+    --accent: 220 14% 92%;
+    --accent-foreground: 220 20% 10%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 220 13% 85%;
+    --input: 220 13% 85%;
+    --ring: 220 72% 32%;
+    --radius: 0.5rem;
+    --sidebar: 218 55% 12%;
+    --sidebar-foreground: 210 20% 90%;
+    --sidebar-accent: 218 45% 20%;
+    --success: 142 60% 38%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 5%;
+    --info: 205 70% 45%;
+    --info-foreground: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, Arial, sans-serif;
+    font-size: 13px;
+    letter-spacing: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: 0;
+    font-weight: 700;
+  }
+
+  /* ── Fidelio klasik 3D border stilleri ── */
+  .fidelio-inset {
+    border: 1px solid;
+    border-color: hsl(var(--border)) hsl(0 0% 100%) hsl(0 0% 100%) hsl(var(--border));
+    background: hsl(var(--card));
+  }
+  .fidelio-raised {
+    border: 1px solid;
+    border-color: hsl(0 0% 100%) hsl(var(--border)) hsl(var(--border)) hsl(0 0% 100%);
+    background: hsl(var(--muted));
+  }
+  .fidelio-groove {
+    border: 2px groove hsl(var(--border));
+  }
+}
+
+@layer components {
+  /* ── Klasik PMS toolbar butonu ── */
+  .fidelio-toolbar-btn {
+    @apply flex flex-col items-center justify-center gap-0.5 rounded-sm px-2 py-1;
+    border: 1px solid transparent;
+    font-size: 10px;
+    min-width: 52px;
+  }
+  .fidelio-toolbar-btn:hover {
+    background: hsl(var(--accent));
+    border-color: hsl(var(--border));
+  }
+  .fidelio-toolbar-btn:active {
+    background: hsl(var(--muted));
+  }
+
+  /* ── Klasik status bar ── */
+  .fidelio-statusbar {
+    border-top: 1px solid hsl(var(--border));
+    background: hsl(var(--card));
+    font-size: 11px;
+    padding: 2px 8px;
+  }
+
+  /* ── Klasik fieldset/group ── */
+  .fidelio-fieldset {
+    border: 1px solid hsl(var(--border));
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    margin-bottom: 8px;
+  }
+  .fidelio-fieldset > legend {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 0 4px;
+    color: hsl(var(--foreground));
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(220 10% 80%) hsl(220 10% 93%);
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: hsl(220 10% 93%);
+    border-radius: 4px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: hsl(220 10% 78%);
+    border-radius: 4px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background-color: hsl(220 10% 65%);
+  }
+  .glass {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+}

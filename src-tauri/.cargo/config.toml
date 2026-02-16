@@ -1,0 +1,4 @@
+[build]
+# Windows Defender file lock workaround - use temp dir for build artifacts
+target-dir = "C:\\Users\\hazar\\AppData\\Local\\Temp\\tauri_build_pms"
+jobs = 2
