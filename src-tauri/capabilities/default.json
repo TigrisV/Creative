@@ -1,0 +1,10 @@
+{
+  "identifier": "default",
+  "description": "Creative PMS default capabilities",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "shell:allow-open",
+    "updater:default"
+  ]
+}
